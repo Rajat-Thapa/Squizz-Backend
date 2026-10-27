@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:squizz;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ''
+app:
+  public-url: https://squizz.example
+  notification-url: http://localhost:9999
+  internal-api-key: integration-test-secret-with-over-32-characters
+  outbox-enabled: false

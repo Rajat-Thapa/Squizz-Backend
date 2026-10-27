@@ -1,0 +1,29 @@
+server:
+  port: ${PORT:8081}
+  error:
+    include-message: never
+    include-stacktrace: never
+spring:
+  application:
+    name: squizz-subscription-service
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/squizz}
+    username: ${DATABASE_USER:squizz}
+    password: ${DATABASE_PASSWORD}
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+app:
+  public-url: ${PUBLIC_SITE_URL:http://localhost:5173}
+  notification-url: ${NOTIFICATION_URL:http://localhost:8082}
+  internal-api-key: ${INTERNAL_API_KEY}
+  outbox-enabled: ${OUTBOX_ENABLED:true}
+  outbox-delay-ms: ${OUTBOX_DELAY_MS:5000}
