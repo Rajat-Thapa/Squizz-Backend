@@ -12,11 +12,13 @@ services:
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:?Set INTERNAL_API_KEY}
       PUBLIC_SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:5173}
       NOTIFICATION_URL: http://notification-service:8082
+      WAITLIST_CONFIRMATION_ENABLED: ${WAITLIST_CONFIRMATION_ENABLED:-false}
+      OUTBOX_ENABLED: ${OUTBOX_ENABLED:-true}
     depends_on:
       postgres: { condition: service_healthy }
-      notification-service: { condition: service_started }
     restart: unless-stopped
   notification-service:
+    profiles: [email]
     build:
       context: .
       args: { SERVICE: notification-service }
@@ -33,6 +35,7 @@ services:
     restart: unless-stopped
   postgres:
     image: postgres:17-alpine
+    ports: ["127.0.0.1:5433:5432"]
     environment:
       POSTGRES_DB: squizz
       POSTGRES_USER: squizz
@@ -45,6 +48,7 @@ services:
       retries: 20
     restart: unless-stopped
   mailpit:
+    profiles: [email]
     image: axllent/mailpit:v1.27
     ports: ["127.0.0.1:8025:8025"]
     restart: unless-stopped

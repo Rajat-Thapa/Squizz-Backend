@@ -13,14 +13,22 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 @Service
 public class SubscriptionService {
- private final JdbcTemplate db; private final String publicUrl;
- public SubscriptionService(JdbcTemplate db,@Value("${app.public-url}") String publicUrl) { this.db=db;this.publicUrl=publicUrl.replaceAll("/$",""); }
+ private final JdbcTemplate db; private final String publicUrl; private final boolean confirmationEnabled;
+ public SubscriptionService(JdbcTemplate db,@Value("${app.public-url}") String publicUrl,@Value("${app.confirmation-enabled:false}") boolean confirmationEnabled) { this.db=db;this.publicUrl=publicUrl.replaceAll("/$","");this.confirmationEnabled=confirmationEnabled; }
  static String hash(String token) { try { return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8))); } catch(NoSuchAlgorithmException e) { throw new IllegalStateException(e); } }
  static String token() { return UUID.randomUUID().toString()+UUID.randomUUID().toString(); }
  @Transactional
  public void subscribe(SubscriptionRequest r) {
   String email=r.email().trim().toLowerCase(Locale.ROOT); OffsetDateTime now=OffsetDateTime.now(ZoneOffset.UTC);
   var rows=db.queryForList("SELECT id,status,updated_at FROM subscribers WHERE email=? FOR UPDATE",email);
+  // Capture unverified addresses without creating mail jobs or changing existing subscriptions.
+  if(!confirmationEnabled) {
+   if(rows.isEmpty()) {
+    String interests=r.interests().stream().map(Enum::name).sorted().collect(Collectors.joining(","));
+    db.update("INSERT INTO subscribers(id,email,interests,status,consent_version,consent_at,unsubscribe_hash,created_at,updated_at) VALUES (?,?,?,'PENDING','launch-v1',?,?,?,?)",UUID.randomUUID(),email,interests,now,hash(token()),now,now);
+   }
+   return;
+  }
   UUID id=UUID.randomUUID();
   if(!rows.isEmpty()) {
    var row=rows.get(0);id=(UUID)row.get("id");

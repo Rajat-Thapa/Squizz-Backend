@@ -25,5 +25,6 @@ app:
   public-url: ${PUBLIC_SITE_URL:http://localhost:5173}
   notification-url: ${NOTIFICATION_URL:http://localhost:8082}
   internal-api-key: ${INTERNAL_API_KEY}
+  confirmation-enabled: ${WAITLIST_CONFIRMATION_ENABLED:false}
   outbox-enabled: ${OUTBOX_ENABLED:true}
   outbox-delay-ms: ${OUTBOX_DELAY_MS:5000}

@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.client.RestClient;
-@Component @ConditionalOnProperty(name="app.outbox-enabled",havingValue="true",matchIfMissing=true)
+@Component @ConditionalOnProperty(name={"app.outbox-enabled","app.confirmation-enabled"},havingValue="true",matchIfMissing=false)
 public class OutboxWorker {
  private static final Logger log=LoggerFactory.getLogger(OutboxWorker.class);
  private final JdbcTemplate db;private final TransactionTemplate tx;private final RestClient client;private final String key;
@@ -30,7 +30,7 @@ public class OutboxWorker {
   });if(!Boolean.TRUE.equals(found))break;}
  }
  @Scheduled(fixedDelay=3600000) public void purgeExpiredPending(){
-  // Pending, unconfirmed addresses are automatically removed after seven days.
-  db.update("DELETE FROM subscribers WHERE status='PENDING' AND updated_at<?",OffsetDateTime.now(ZoneOffset.UTC).minusDays(7));
+  // Expire abandoned confirmation flows, retaining addresses captured without email.
+  db.update("DELETE FROM subscribers WHERE status='PENDING' AND confirmation_hash IS NOT NULL AND updated_at<?",OffsetDateTime.now(ZoneOffset.UTC).minusDays(7));
  }
 }

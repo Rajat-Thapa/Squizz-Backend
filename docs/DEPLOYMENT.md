@@ -6,6 +6,12 @@ setup is bound to loopback for local testing.
 The static site lives in the separate **squizz-frontend** repository. See its
 `docs/DEPLOYMENT.md` for serving the built assets and routing `/api` here.
 
+## Database-only capture (default)
+
+No SMTP setup is needed. Leave `WAITLIST_CONFIRMATION_ENABLED=false` and run
+`docker compose up -d --build subscription-service`. See `DATABASE-WAITLIST.md`
+for signup verification and retention behavior.
+
 ## Turn on real email
 
 In `.env`, replace the development values:
@@ -14,6 +20,7 @@ In `.env`, replace the development values:
 DATABASE_PASSWORD=<strong database password>
 INTERNAL_API_KEY=<random secret of at least 32 characters>
 PUBLIC_SITE_URL=https://your-squizz-domain.example
+WAITLIST_CONFIRMATION_ENABLED=true
 SMTP_HOST=<your provider SMTP host>
 SMTP_PORT=587
 SMTP_USERNAME=<provider username>
@@ -29,8 +36,8 @@ configure `spring.mail.properties.mail.smtp.ssl.enable=true` for the notificatio
 service instead of assuming the STARTTLS settings above will work.
 
 Verify your sending domain and its SPF/DKIM records with your email provider. The local
-`hello@squizz.test` sender is only for Mailpit. Restart with
-`docker compose up -d --build` after configuration changes.
+`hello@squizz.test` sender is only for Mailpit. Start the optional email services with
+`docker compose --profile email up -d --build` after configuration changes.
 
 `PUBLIC_SITE_URL` must match the origin visitors actually use, because it forms the
 confirmation and unsubscribe links. It is the one setting here that depends on where the

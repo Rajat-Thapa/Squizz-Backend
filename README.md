@@ -1,7 +1,8 @@
 # Squizz backend — email signup services
 
 Spring Boot services behind the Squizz launch-list signup: subscription capture,
-double opt-in confirmation, unsubscribe, and transactional email delivery.
+database-only capture by default, with optional double opt-in confirmation,
+unsubscribe, and transactional email delivery.
 
 The site that calls this API lives in the separate **squizz-frontend** repository.
 
@@ -30,9 +31,9 @@ cp .env.example .env
 docker compose up --build
 ```
 
-This starts PostgreSQL, Mailpit and both services. The API is published on
-`127.0.0.1:8081` and the Mailpit test inbox on `http://localhost:8025`. No email reaches
-real inboxes until you configure a real SMTP provider.
+This starts PostgreSQL and the subscription service. Signups are saved without
+sending or queueing email. The API is published on `127.0.0.1:8081`.
+See `docs/DATABASE-WAITLIST.md` for capture verification and the optional email profile.
 
 Check it is up:
 
@@ -50,7 +51,8 @@ publishes, so no extra configuration is needed:
 cd ../squizz-frontend && npm ci && npm run dev
 ```
 
-Then submit the form at `http://localhost:5173`, open Mailpit and confirm the email.
+Then submit the form at `http://localhost:5173` and inspect the `subscribers` table
+as described in `docs/DATABASE-WAITLIST.md`.
 
 `PUBLIC_SITE_URL` in `.env` must match the origin visitors use — it forms the
 confirmation and unsubscribe links. It defaults to the Vite dev server
@@ -77,7 +79,7 @@ mvn package
 ## Production notes
 
 Set `PUBLIC_SITE_URL` to your real site, generate fresh `DATABASE_PASSWORD` and
-`INTERNAL_API_KEY` values, and configure a verified SMTP sending domain before accepting
-real signups. Terminate HTTPS at a reverse proxy in front of `subscription-service`, and
+`INTERNAL_API_KEY` values, before accepting real signups. SMTP and a verified sending domain are required
+only when enabling confirmation emails. Terminate HTTPS at a reverse proxy in front of `subscription-service`, and
 keep PostgreSQL, `notification-service` and Mailpit off the public internet. See
 `docs/DEPLOYMENT.md`.

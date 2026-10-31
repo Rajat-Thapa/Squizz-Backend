@@ -20,6 +20,13 @@ The browser sends same-origin JSON requests to `/api/v1`. Nginx routes these to 
 
 **202** returns a generic message for both existing and new addresses, avoiding a subscriber-enumeration response. **400** means invalid input. **429** means rate limited. A database failure is a server error, never a false success.
 
+With the default `WAITLIST_CONFIRMATION_ENABLED=false`, new addresses are saved as
+unverified `PENDING` records without confirmation tokens or email jobs. Duplicate
+submissions leave existing records unchanged, including unsubscribed addresses.
+The email worker and its expiry job are disabled.
+
+With `WAITLIST_CONFIRMATION_ENABLED=true`, the confirmation flow applies:
+
 An existing active subscription cannot have its preferences changed anonymously by submitting its email. Duplicate requests within five minutes do not send additional confirmation emails. Pending or unsubscribed addresses may request a fresh confirmation after that cooldown. Rejoining still requires email confirmation.
 
 ## POST /api/v1/subscriptions/confirm
@@ -55,7 +62,7 @@ Notification service: `POST /internal/emails`. Requires `X-Internal-Key` matchin
 - The worker locks due outbox rows with `FOR UPDATE SKIP LOCKED`, suitable for multiple workers sharing the database.
 - Failed email attempts use exponential backoff, capped at one hour. Successful records are deleted.
 - Email delivery is **at least once**: a crash after SMTP accepts a message but before the outbox commits can cause a duplicate. Confirmation and unsubscribe actions tolerate repeats.
-- Pending addresses are removed after seven days. Active and unsubscribed records are retained until the operator deletes them; unsubscribed records act as a suppression list. Establish an appropriate retention policy before launch.
+- In email mode, pending addresses with confirmation tokens are removed after seven days. Capture-only addresses without confirmation tokens are retained. Active and unsubscribed records are retained until the operator deletes them; unsubscribed records act as a suppression list. Establish an appropriate retention policy before launch.
 - There is no campaign scheduler or bulk-send endpoint. Before sending a later launch campaign, select only `ACTIVE` addresses and include an unsubscribe mechanism. Do not export pending or suppressed records into a campaign audience.
 
 ## Abuse controls

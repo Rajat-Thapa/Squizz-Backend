@@ -7,4 +7,5 @@ app:
   public-url: https://squizz.example
   notification-url: http://localhost:9999
   internal-api-key: integration-test-secret-with-over-32-characters
+  confirmation-enabled: true
   outbox-enabled: false

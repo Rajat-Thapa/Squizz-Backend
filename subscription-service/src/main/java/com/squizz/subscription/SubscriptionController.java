@@ -16,7 +16,7 @@ public class SubscriptionController {
   try{service.subscribe(request);}catch(DuplicateKeyException ignored){/* Concurrent signup already inserted the same email. */}
   return accepted();
  }
- private ResponseEntity<?> accepted(){return ResponseEntity.accepted().body(Map.of("message","If this is a new signup, a confirmation email is on its way."));}
+ private ResponseEntity<?> accepted(){return ResponseEntity.accepted().body(Map.of("message","Thanks for joining the Squizz waitlist."));}
  @PostMapping("/confirm") public ResponseEntity<?> confirm(@Valid @RequestBody TokenRequest request){service.confirm(request.token());return ResponseEntity.ok(Map.of("message","Email confirmed."));}
  @PostMapping("/unsubscribe") public ResponseEntity<?> unsubscribe(@Valid @RequestBody TokenRequest request){service.unsubscribe(request.token());return ResponseEntity.ok(Map.of("message","Unsubscribed."));}
 }
